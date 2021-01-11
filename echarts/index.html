@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Echarts Test</title>
+  <meta name="description" content="Echarts">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0/dist/echarts.min.js"></script>
+</head>
+
+<body id="body">
+  <noscript>We are sorry but you need JavaScript to use Heptaward</noscript>
+  <div id="main" style="width:1000px; height:400px;"></div>
+  <script type="text/javascript">
+    // based on prepared DOM, initialize echarts instance
+
+
+    const callWeather = async () => {
+      try {
+        const response = await fetch(
+          "https://community-open-weather-map.p.rapidapi.com/forecast?units=metric&lat=36.7722&lon=-4.03931&lang=fr", {
+            "method": "GET",
+            "headers": {
+              "x-rapidapi-key": "****",
+              "x-rapidapi-host": "community-open-weather-map.p.rapidapi.com"
+            }
+          })
+        if (!response || !response.body) return null;
+        const json = await response.json();
+        return json;
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    const formatDate = (date) => {
+      return `${('0' + date.getDate()).slice(-2)}/${('0' + date.getMonth() + 1).slice(-2)}`;
+    }
+
+    const main = async () => {
+      var myChart = echarts.init(document.getElementById('main'));
+
+      const weather = await callWeather();
+
+      const dataset = {
+        source: weather.list.filter(t => (new Date(t.dt * 1000)).getHours() == 13).map(t => {
+          return [formatDate(new Date(t.dt * 1000)), Math.round(t.main.temp)]
+        })
+      }
+
+      // specify chart configuration item and data
+      var option = {
+        title: {
+          text: `Weather: ${weather.city.name}, ${weather.city.country}`
+        },
+        tooltip: {},
+        legend: {
+          data: ['Temperature']
+        },
+        xAxis: {
+          type: 'category'
+        },
+        yAxis: {},
+        dataset,
+        series: [{
+          name: 'Temperature',
+          type: 'bar',
+          encode: { x: 0, y: 1 },
+        }]
+      };
+
+      // use configuration item and data specified to show chart
+      myChart.setOption(option);
+    }
+
+    main();
+  </script>
+</body>
+
+</html>
